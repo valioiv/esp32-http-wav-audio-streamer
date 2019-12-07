@@ -712,50 +712,38 @@ static esp_err_t audio_handler(httpd_req_t *req)
     size_t wav_header_len;
     size_t audio_chunk_len;
 
+TRY_AGAIN:
     res = httpd_resp_set_type(req, _AUDIO_CONTENT_TYPE);
     if (res != ESP_OK)
     {
-        return res;
+        return httpd_resp_send_500(req);
     }
-
-    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
     
-    wav_header_len = sizeof(wav_header) / sizeof(wav_header);
+    wav_header_len = sizeof(wav_header) / sizeof(char);
+    ESP_LOGE(TAG, ">>>>>>>>> %d >>> %c %c %c %c", wav_header_len, wav_header[0], wav_header[1], wav_header[2], wav_header[3]);
     res = httpd_resp_send_chunk(req, (const char *)wav_header, wav_header_len);
     if (res != ESP_OK)
     {
         ESP_LOGE(TAG, "WAV header sent failed");
-        res = ESP_FAIL;
-    }
-    else
-    {
-        while (true)
-        {
-            audio_chunk = app_audio_get_input();
-            if (!audio_chunk)
-            {
-                ESP_LOGE(TAG, "Audio capture failed");
-                res = ESP_FAIL;
-            }
-            else
-            {
-                audio_chunk_len = 2*1024;
-                res = httpd_resp_send_chunk(req, (const char *)audio_chunk, audio_chunk_len);
-                //if (res == ESP_OK)
-                //{
-                //    res = httpd_resp_send_chunk(req, (const char *)audio_chunk, audio_chunk_len);
-                //}
-                //if (res == ESP_OK)
-                //{
-                //    res = httpd_resp_send_chunk(req, _STREAM_BOUNDARY, strlen(_STREAM_BOUNDARY));
-                //}
-            }
-        }
-    }
-    
-    if (res)
-    {
         return httpd_resp_send_500(req);
+    }
+
+    while(true)
+    {
+        audio_chunk = app_audio_get_input();
+        if (!audio_chunk)
+        {
+            ESP_LOGE(TAG, "Audio capture failed");
+            return httpd_resp_send_500(req);
+        }
+
+        audio_chunk_len = 2*4096; // because 2 bytes per sample
+        res = httpd_resp_send_chunk(req, (const char *)audio_chunk, audio_chunk_len);
+        if (res != ESP_OK)
+        {
+            ESP_LOGW(TAG, "Audio chunk sent failed");
+            goto TRY_AGAIN;
+        }
     }
     
     return res;
@@ -1080,12 +1068,4 @@ void app_httpd_main()
     {
         httpd_register_uri_handler(stream_httpd, &stream_uri);
     }
-
-    //config.server_port += 1;
-    //config.ctrl_port += 1;
-    //ESP_LOGI(TAG, "Starting audio server on port: '%d'", config.server_port);
-    //if (httpd_start(&audio_httpd, &config) == ESP_OK)
-    //{
-    //    httpd_register_uri_handler(audio_httpd, &audio_uri);
-    //}
 }

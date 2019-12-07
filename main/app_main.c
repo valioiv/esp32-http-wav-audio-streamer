@@ -28,7 +28,7 @@
 void app_main()
 {
     app_wifi_main();
-    app_audio_main();
     app_camera_main();
     app_httpd_main();
+    app_audio_main();
 }

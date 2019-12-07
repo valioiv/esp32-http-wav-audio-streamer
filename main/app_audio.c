@@ -96,10 +96,10 @@ void* app_audio_get_input()
 
 void app_audio_main ()
 {
-    int audio_chunksize=1024;
+    int audio_chunksize=4096;
 
     //Initialize sound source
-    sndQueue=xQueueCreate(2, (audio_chunksize*sizeof(int16_t)));
+    sndQueue=xQueueCreate(8, (audio_chunksize*sizeof(int16_t)));
     srcif.queue=&sndQueue;
     srcif.item_size=audio_chunksize*sizeof(int16_t);
     
