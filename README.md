@@ -1,4 +1,4 @@
-# Camera with Web Server
+# Camera with Web Server and audio WAV streaming over HTTP
 
 # Preparation
 
@@ -17,5 +17,6 @@ After you've completed the hardware settings, please follow the steps below:
 4. **Open Your Browser** and point it to `http://[ip-of-esp32]/`;
 5. **To Get Image** press `Get Still` or `Start Stream`;
 6. **Use The Options** to enable/disable Face Detection, Face Recognition and more;
+7. **If you want to hear audio go to `http://[ip-of-esp32]/audio/`, your browser will automatically start audio player;
 
 For more details of the http handler, please refer to [esp32-camera](https://github.com/espressif/esp32-camera).
